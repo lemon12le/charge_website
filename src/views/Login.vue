@@ -13,38 +13,17 @@
              @keyup.enter.native="login"
     >
       <h3 class="loginTitle">{{ showLogin?"充电桩系统登录":"代理地址修改" }}</h3>
-      <el-form-item v-if="showLogin" prop="username" label="用户名">
+      <el-form-item prop="username" label="用户名">
         <el-input type="text" auto-complete="false" v-model="loginForm.username" placeholder="请输入用户名"></el-input>
       </el-form-item>
-      <el-form-item v-if="showLogin" prop="password" label="密码">
+      <el-form-item prop="password" label="密码">
         <el-input type="text" auto-complete="false" v-model="loginForm.password" show-password placeholder="请输入密码"></el-input>
       </el-form-item>
-      <el-form-item v-if="showLogin">
+      <el-form-item>
         <el-button type="primary" @click="login" style="width: 30%;margin-left: 70px;margin-top: 8px">登录</el-button>
       </el-form-item>
-      <div class="lastColumn" v-if="showLogin">
-        <el-link @click="showLogin = !showLogin;">点我更改代理</el-link>
+      <div class="lastColumn">
         <el-link @click="toRegister">我没有账号，点击注册</el-link>
-      </div>
-
-      <el-form-item label="代理地址" v-if="!showLogin">
-        <el-input v-model="proxyAddress" placeholder="请输入代理服务器地址" />
-      </el-form-item>
-      <el-form-item label="可选代理" v-if="!showLogin">
-        <el-select v-model="proxyAddress" placeholder="Activity zone">
-          <el-option label="小组4" value="4" />
-          <el-option label="小组10" value="10" />
-          <el-option label="小组16" value="16" />
-          <el-option label="小组22" value="22" />
-          <el-option label="小组28" value="28" />
-        </el-select>
-      </el-form-item>
-      <div v-if="!showLogin" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-        <div style="display: flex; justify-content: center; flex-grow: 1;">
-          <el-button type="primary" @click="applyProxy">更改</el-button>
-          <el-button type="danger" @click="resetProxy">重置</el-button>
-        </div>
-        <el-link @click="showLogin = !showLogin;">返回</el-link>
       </div>
     </el-form>
   </div>
@@ -62,7 +41,6 @@ export default {
   name: 'userCharging',
   data() {
     return {
-      showLogin:true,
       proxyAddress: 'http://10.128.238.56:8080',
       loginForm: {
         username: '',
@@ -199,8 +177,6 @@ export default {
 }
 
 .lastColumn{
-  display: flex;
-  margin-top: 0;
-  justify-content: space-between;
+  text-align: right;
 }
 </style>
