@@ -1,6 +1,7 @@
 <template>
   <div ref='vantaRef' class="Page">
     <el-form :rules="rules"
+             key="loginForm"
              v-loading="loading"
              element-loading-text="正在登录"
              :element-loading-spinner="svg"
@@ -11,19 +12,43 @@
              label-width="80px"
              @keyup.enter.native="login"
     >
-      <h3 class="loginTitle">充电桩系统登录</h3>
-      <el-form-item prop="username" label="用户名">
+      <h3 class="loginTitle">{{ showLogin?"充电桩系统登录":"代理地址修改" }}</h3>
+      <el-form-item v-if="showLogin" prop="username" label="用户名">
         <el-input type="text" auto-complete="false" v-model="loginForm.username" placeholder="请输入用户名"></el-input>
       </el-form-item>
-      <el-form-item prop="password" label="密码">
+      <el-form-item v-if="showLogin" prop="password" label="密码">
         <el-input type="text" auto-complete="false" v-model="loginForm.password" show-password placeholder="请输入密码"></el-input>
       </el-form-item>
-      <el-form-item>
+      <el-form-item v-if="showLogin">
         <el-button type="primary" @click="login" style="width: 30%;margin-left: 70px;margin-top: 8px">登录</el-button>
       </el-form-item>
-      <div style="text-align: right;margin-top: 0px"><el-link @click="toRegister">我没有账号，点击注册</el-link></div>
+      <div class="lastColumn" v-if="showLogin">
+        <el-link @click="showLogin = !showLogin;">点我更改代理</el-link>
+        <el-link @click="toRegister">我没有账号，点击注册</el-link>
+      </div>
+
+      <el-form-item label="代理地址" v-if="!showLogin">
+        <el-input v-model="proxyAddress" placeholder="请输入代理服务器地址" />
+      </el-form-item>
+      <el-form-item label="可选代理" v-if="!showLogin">
+        <el-select v-model="proxyAddress" placeholder="Activity zone">
+          <el-option label="小组4" value="4" />
+          <el-option label="小组10" value="10" />
+          <el-option label="小组16" value="16" />
+          <el-option label="小组22" value="22" />
+          <el-option label="小组28" value="28" />
+        </el-select>
+      </el-form-item>
+      <div v-if="!showLogin" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+        <div style="display: flex; justify-content: center; flex-grow: 1;">
+          <el-button type="primary" @click="applyProxy">更改</el-button>
+          <el-button type="danger" @click="resetProxy">重置</el-button>
+        </div>
+        <el-link @click="showLogin = !showLogin;">返回</el-link>
+      </div>
     </el-form>
   </div>
+
 </template>
 
 <script>
@@ -31,10 +56,14 @@ import {postRequest} from "@/utils/api";
 import WAVES from 'vanta/src/vanta.waves'
 import * as THREE from 'three'
 
+//创建代理服务器
+
 export default {
   name: 'userCharging',
   data() {
     return {
+      showLogin:true,
+      proxyAddress: 'http://10.128.238.56:8080',
       loginForm: {
         username: '',
         password: ''
@@ -81,6 +110,21 @@ export default {
     toRegister(){
       this.$router.push('/Register');
     },
+    applyProxy() {
+      // 应用代理地址
+      const proxyConfig = {
+        ws: false,
+        target: this.proxyAddress,
+        changeOrigin: true,
+        pathRewrite: {
+          '^/': '/'
+        },
+        // 使用 proxyConfig 更新 http-proxy-middleware 的代理配置
+        // ...
+      };
+      this.$axios.defaults.proxy = proxyConfig;
+      console.log(this.$axios.defaults.proxy);
+    }
   },
 
   mounted() {
@@ -109,6 +153,7 @@ export default {
       this.vantaEffect.destroy()
     }
   },
+
 }
 </script>
 
@@ -142,4 +187,20 @@ export default {
   left: 0;
 }
 
+.proxyModify{
+  border-radius: 15px;
+  background-clip: padding-box;
+  margin: 250px auto;
+  width: 400px;
+  padding: 15px 35px 15px 35px;
+  background-color: #fff;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 0 25px #cac6c6;
+}
+
+.lastColumn{
+  display: flex;
+  margin-top: 0;
+  justify-content: space-between;
+}
 </style>

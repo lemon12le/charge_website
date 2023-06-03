@@ -15,8 +15,8 @@
           <div>
             <el-button @click="switchShowInput" :icon="Edit" circle />
             <input v-if="showInput" type="text" style="width: 20%;margin: 0 15px 0 15px " v-model="inputValue" @blur="hideInput" @keyup.enter="saveInput" />
-            <el-button v-if="!showInput" :disabled="leftNochange" type="primary" @click="leftButtonHandle">{{ leftButtonMsg }}</el-button>
-            <el-button type="primary" :disabled="modeNoChange" @click="rightButtonHandle">{{ rightButtonMsg }}</el-button>
+            <el-button id="leftButton" v-if="!showInput" :disabled="leftNochange" type="primary" @click="leftButtonHandle">{{ leftButtonMsg }}</el-button>
+            <el-button id="rightButton" type="primary" :disabled="modeNoChange" @click="rightButtonHandle">{{ rightButtonMsg }}</el-button>
             <el-button @click="getCharge" :icon="RefreshRight" circle />
           </div>
         </template>
@@ -136,8 +136,10 @@ import {left} from "core-js/internals/array-reduce";
           this.cancelCharge();
         else if(this.states === "充电区等候中")
           this.cancelCharge();
-        else
+        else {
           this.createCharge();
+        }
+        document.getElementById("leftButton").blur();
       },
       rightButtonHandle() {
         if (this.fastChargingMode == true) {
@@ -149,6 +151,7 @@ import {left} from "core-js/internals/array-reduce";
           this.modifyCharge(this.chargeApplyInfo);
         }
         this.rightButtonMsg = "模式:"+(this.fastChargingMode ? "快充" : "慢充");
+        document.getElementById("rightButton").blur();
       },
       getCharge(){
         console.log("getCharge");
@@ -198,8 +201,12 @@ import {left} from "core-js/internals/array-reduce";
         this.chargeApplyInfo.fast = this.fastChargingMode;
         postRequest('/charge', this.chargeApplyInfo).then(resp=>{
           //修改页面状态
-          this.leftButtonMsg = "取消充电";
-          this.updateUI(resp);
+          if(resp){
+            this.leftButtonMsg = "取消充电";
+            this.updateUI(resp);
+          }
+          else
+            this.getCharge();
         })
         this.loading = false;
       },
