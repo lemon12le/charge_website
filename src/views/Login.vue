@@ -12,7 +12,7 @@
              label-width="80px"
              @keyup.enter.native="login"
     >
-      <h3 class="loginTitle">{{ showLogin?"充电桩系统登录":"代理地址修改" }}</h3>
+      <h3 class="loginTitle">充电桩系统登录</h3>
       <el-form-item prop="username" label="用户名">
         <el-input type="text" auto-complete="false" v-model="loginForm.username" placeholder="请输入用户名"></el-input>
       </el-form-item>

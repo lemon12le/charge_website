@@ -28,7 +28,7 @@ axios.interceptors.response.use(success => {
     }
     else{
         if(success.data.msg !== null){
-
+            ElMessage.success(success.data.message);
         }
         else{
             ElMessage.error("不知道什么原因，操作失败了:(");

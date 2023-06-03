@@ -14,7 +14,7 @@
         <template #extra>
           <div>
             <el-button @click="switchShowInput" :icon="Edit" circle />
-            <input v-if="showInput" type="text" style="width: 20%;margin: 0 15px 0 15px " v-model="inputValue" @blur="hideInput" @keyup.enter="saveInput" />
+            <input v-if="showInput" type="text" style="width: 20%;margin: 0 15px 0 15px " v-model="inputValue" @blur="saveInput" @keyup.enter="saveInput" />
             <el-button id="leftButton" v-if="!showInput" :disabled="leftNochange" type="primary" @click="leftButtonHandle">{{ leftButtonMsg }}</el-button>
             <el-button id="rightButton" type="primary" :disabled="modeNoChange" @click="rightButtonHandle">{{ rightButtonMsg }}</el-button>
             <el-button @click="getCharge" :icon="RefreshRight" circle />
@@ -76,6 +76,8 @@ import {left} from "core-js/internals/array-reduce";
       },
       saveInput() {
         // 处理保存操作逻辑
+        if(this.inputValue == null)
+          this.inputValue = 300;
         this.chargeApplyInfo.amount = this.inputValue;
         this.showInput = false;
         this.modifyCharge(this.chargeApplyInfo);
@@ -107,7 +109,8 @@ import {left} from "core-js/internals/array-reduce";
           this.modeNoChange = false;
         }else if(resp.status === "充电区等候中"){
           this.iconStyle = "warning";
-          this.titleMessage = "小钱等您插上充电枪哟";
+          this.titleMessage = "请到达" + resp.pile.toString() + "号充电桩";
+          this.subtitleMsg = "小钱等您插上充电枪哟";
           this.leftNochange = false;
           this.leftButtonMsg = "取消充电";
           this.rightButtonMsg = "模式:" + (resp.fast ? "快充" : "慢充");
