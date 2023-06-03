@@ -2,7 +2,7 @@
   <div style="text-align:center;">
     充电详情
   </div>
-  <div style="display: flex">
+  <div style="display: flex" >
     <el-col :sm="12" :lg="6" class="chargingState"
             v-loading="loading"
             element-loading-text="正在加载用户充电状态"
@@ -187,17 +187,16 @@ import {left} from "core-js/internals/array-reduce";
       modifyCharge(){
         console.log("modifyCharge");
         this.chargeApplyInfo.fast = this.fastChargingMode;
-        this.chargeApplyInfo.totalAmount = 100 - this.chargeApplyInfo.amount;
-        putRequest('/charge',this.chargeApplyInfo).then(resp=>{
-          //修改页面状态
-          console.log(JSON.stringify(resp));
-        })
+        if(this.states !== "" && this.states !== "充电完成"){
+          putRequest('/charge',this.chargeApplyInfo).then(resp=>{
+            //修改页面状态
+            console.log(JSON.stringify(resp));
+          })
+        }
       },
       createCharge(){
-        console.log("createCharge");
+        console.log(this.chargeApplyInfo.amount);
         this.loading = true;
-        this.chargeApplyInfo.amount = Math.random()*300;
-        this.chargeApplyInfo.fast = this.fastChargingMode;
         this.chargeApplyInfo.fast = this.fastChargingMode;
         postRequest('/charge', this.chargeApplyInfo).then(resp=>{
           //修改页面状态

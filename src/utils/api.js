@@ -19,18 +19,16 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(success => {
     //登录成功
     if (success.data.code == 0) {
-        ElMessage.success("操作成功");
     }
     else if(success.data.code === 4){
         ElMessage.error(success.data.message);
-
     }
     else if(success.data.code === 1){
         ElMessage.error("用户名或密码错误");
     }
     else{
         if(success.data.msg !== null){
-            ElMessage.error(success.data.message);
+
         }
         else{
             ElMessage.error("不知道什么原因，操作失败了:(");
