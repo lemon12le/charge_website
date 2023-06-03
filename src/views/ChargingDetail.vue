@@ -47,8 +47,8 @@ import {left} from "core-js/internals/array-reduce";
         showInput: false,
         loading:true,
         pile:88,
-        titleMessage: "暂未充电",
-        subtitleMsg:"前方还有X人",
+        titleMessage: "网络错误",
+        subtitleMsg:"请检查网络连接",
         leftButtonMsg:"左按钮",
         rightButtonMsg:"右按钮",
         iconStyle:"error",
@@ -97,7 +97,10 @@ import {left} from "core-js/internals/array-reduce";
         }else if(resp.status === "等候区排队中"){
           this.iconStyle = "info";
           this.titleMessage = "等候区排队中";
-          this.subtitleMsg = "正在排队,前方还有" + resp.position.toString() + "辆车";
+          if(resp.position === 0)
+            this.subtitleMsg = "别着急,下一辆就到你啦!";
+          else if(resp.position != 0 )
+            this.subtitleMsg = "您的爱车正在排队,前方还有" + resp.position.toString() + "辆车";
           this.leftButtonMsg = "取消排队";
           this.leftNochange = false;
           this.rightButtonMsg = "模式:" + (resp.fast ? "快充" : "慢充");
@@ -113,6 +116,7 @@ import {left} from "core-js/internals/array-reduce";
           this.iconStyle = "success";
           this.leftButtonMsg = "再次充电";
           this.leftNochange = false;
+          this.modeNoChange = false;
           this.rightButtonMsg = "模式:" + (resp.fast ? "快充" : "慢充");
           this.titleMessage = "本次充电完成";
           this.subtitleMsg = "您的爱车在" + resp.pile.toString() + "号充电桩，请记得将充电桩归位哟";
@@ -131,7 +135,7 @@ import {left} from "core-js/internals/array-reduce";
         else if(this.states === "等候区排队中")
           this.cancelCharge();
         else if(this.states === "充电区等候中")
-          this.finishCharge();
+          this.cancelCharge();
         else
           this.createCharge();
       },
@@ -141,21 +145,27 @@ import {left} from "core-js/internals/array-reduce";
         } else {
           this.fastChargingMode = true;
         }
+        if(this.states === "等候区排队中"){
+          this.modifyCharge(this.chargeApplyInfo);
+        }
         this.rightButtonMsg = "模式:"+(this.fastChargingMode ? "快充" : "慢充");
       },
       getCharge(){
+        console.log("getCharge");
         this.loading = true;
         getRequest('/charge').then(resp=>{
           console.log(JSON.stringify(resp));
           //alert(JSON.stringify(resp));
           //查询到用户有充电请求
           if(resp && resp.code === 0) {
+            console.log("getCharge success");
             this.pile = resp.pile;
             //修改页面状态
             this.updateUI(resp);
           }
           //用户没有充电
           else if(resp && !resp.status){
+            console.log("getCharge fail1");
             //修改页面状态
             this.updateUI(resp);
             this.iconStyle = "error";
@@ -164,18 +174,20 @@ import {left} from "core-js/internals/array-reduce";
             this.leftButtonMsg = "开始充电";
             this.rightButtonMsg = "模式:" + (this.fastChargingMode ? "快充" : "慢充");
             ElMessage.warning("用户没有充电请求");
+          }else{
+            console.log("getCharge fail2");
+            this.updateUI(resp);
           }
         })
         this.loading = false;
       },
       modifyCharge(){
         console.log("modifyCharge");
-        this.chargeApplyInfo.amount = Math.random()*100;
         this.chargeApplyInfo.fast = this.fastChargingMode;
         this.chargeApplyInfo.totalAmount = 100 - this.chargeApplyInfo.amount;
         putRequest('/charge',this.chargeApplyInfo).then(resp=>{
           //修改页面状态
-          this.states = "";
+          console.log(JSON.stringify(resp));
         })
       },
       createCharge(){
