@@ -11,7 +11,21 @@
             />
             <span class="text-large font-600 mr-3" style="margin-right: 5px"> 吊炸天系统v0.2 </span>
             <el-tag style="font-size: 60%">欢迎您使用吊炸天充电桩!我是最吊的!</el-tag>
-            <el-button type="danger" @click="logOut" style="float:right; margin-top: 10px" plain>注销</el-button>
+            <div style="  display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          margin-top: -25px">
+              <el-date-picker
+                  v-model="timeValue"
+                  type="datetime"
+                  placeholder="Select date and time"
+                  style="margin-right: 5px"
+              />
+              <el-button @click="setTime" type="danger" style="margin-right: 5px"> 重置 </el-button>
+              <el-tag style="font-size: 60%;margin-right: 5px">{{ "时间"+currentTime }}</el-tag>
+              <el-button @click="toggleTimer" :icon=" !isTimerRunning ? VideoPlay : VideoPause" circle />
+            </div>
+            <el-button type="danger" @click="logOut" style="float:right; margin-top: -30px" plain>注销</el-button>
           </div>
         </el-header>
         <el-divider />
@@ -37,20 +51,87 @@
 </template>
 
 <script>
-  import {Menu} from "@element-plus/icons-vue";
+import {Menu, VideoPause, VideoPlay} from "@element-plus/icons-vue";
+import {getRequest, postRequest, putRequest} from "@/utils/api";
 
   export default {
     name:"Home",
-    components: {Menu},
-    methods:{
-      menuClick(index) {
-          this.$router.push(index);
+    computed: {
+      VideoPause() {
+        return VideoPause
       },
-      logOut(){
+      VideoPlay() {
+        return VideoPlay
+      }
+    },
+    components: {Menu},
+    data() {
+      return {
+        currentTime: '',
+        isTimerRunning: true,
+        timer: null,
+        timeValue: '',
+      };
+    },
+    methods: {
+      setTime() {
+        //把this.timeValue转换成时间戳
+        const timestamp = new Date(this.timeValue).getTime();
+        console.log(timestamp);
+        //把时间戳发送给服务器
+        putRequest('/time', timestamp).then(response => {
+          console.log(response);
+        })
+            .catch(error => {
+              console.log(error);
+            });
+      },
+      startTimer() {
+        console.log('start timer');
+        this.timer = setInterval(() => {
+          this.fetchTime();
+        }, 1000);
+      },
+      stopTimer() {
+        console.log('stop timer');
+        clearInterval(this.timer);
+        this.timer = null; // 重置定时器变量
+      },
+      toggleTimer() {
+        console.log('toggle timer');
+        if (this.isTimerRunning) {
+          this.stopTimer();
+        } else {
+          this.startTimer();
+        }
+        this.isTimerRunning = !this.isTimerRunning;
+      },
+      menuClick(index) {
+        this.$router.push(index);
+      },
+      logOut() {
         this.$router.push('/');
         window.sessionStorage.removeItem('tokenStr');
-      }
-    }
+      },
+      fetchTime() {
+        getRequest('/time').then(response => {
+          console.log(response);
+          const timestamp = response.time; // 假设服务器返回的时间在time字段中
+          const date = new Date(timestamp ) ; // 将时间戳转换为毫秒
+          this.currentTime = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        })
+            .catch(error => {
+              console.error('获取时间失败', error);
+            });
+      },
+    },
+    mounted() {
+      this.fetchTime(); // 初始化时获取一次时间
+      this.timer = setInterval(this.fetchTime, 1000); // 每秒钟获取一次时间
+    },
+    beforeUnmount() {
+      this.stopTimer();
+    },
   }
 </script>
 

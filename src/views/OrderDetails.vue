@@ -63,10 +63,13 @@ export default {
         //alert(JSON.stringify(resp));
         if(resp) {
           if(resp.code === 4){
-            this.$message({
+            /*this.$message({
               type: 'error',
               message: '查询失败'
-            })
+            })*/
+            //alert(JSON.stringify(resp));
+          }
+          else if(resp.length === 0){
           }
           //将数据放到表格里
           else{

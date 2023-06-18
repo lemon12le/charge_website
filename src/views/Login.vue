@@ -1,6 +1,6 @@
 <template>
   <div ref='vantaRef' class="Page">
-    <el-form :rules="rules"
+    <el-form
              key="loginForm"
              v-loading="loading"
              element-loading-text="正在登录"
@@ -41,7 +41,6 @@ export default {
   name: 'userCharging',
   data() {
     return {
-      proxyAddress: 'http://10.128.238.56:8080',
       loginForm: {
         username: '',
         password: ''
@@ -49,11 +48,11 @@ export default {
       rules: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 6, max: 16, message: '长度在 6 到 16 个字符', trigger: 'change' }
+          { min: 5, max: 16, message: '长度在 5 到 16 个字符', trigger: 'change' }
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 6, max: 16, message: '长度在 6 到 16 个字符', trigger: 'change' }
+          { min: 5, max: 16, message: '长度在 5 到 16 个字符', trigger: 'change' }
         ]
       },
       loading:false,
@@ -67,7 +66,8 @@ export default {
         if (valid) {
           this.loading = true;
           postRequest('/user/login',this.loginForm).then(resp=>{
-            if(resp && resp.code == "0") {
+
+            if(resp && resp.token) {
               this.loading = false;
               //存储用户token
               const token = resp.token;
@@ -78,7 +78,7 @@ export default {
             }
             this.loading = false;
             // 打印出返回的信息
-            // alert(JSON.stringify(resp));
+             console.log(JSON.stringify(resp));
           })
         } else {
           this.$message.error('填写信息有误，请重新填写');
@@ -88,21 +88,6 @@ export default {
     toRegister(){
       this.$router.push('/Register');
     },
-    applyProxy() {
-      // 应用代理地址
-      const proxyConfig = {
-        ws: false,
-        target: this.proxyAddress,
-        changeOrigin: true,
-        pathRewrite: {
-          '^/': '/'
-        },
-        // 使用 proxyConfig 更新 http-proxy-middleware 的代理配置
-        // ...
-      };
-      this.$axios.defaults.proxy = proxyConfig;
-      console.log(this.$axios.defaults.proxy);
-    }
   },
 
   mounted() {

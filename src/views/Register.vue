@@ -43,8 +43,8 @@ export default {
     let checkPassword=((rule,value,callback)=>{
       if(value.trim().length==0){
         callback(new Error("请确认密码不能为空"));
-      }else if(value.trim().length<6 || value.trim().length >16){
-        callback(new Error("长度在 6 到 16 个字符"));
+      }else if(value.trim().length<5 || value.trim().length >16){
+        callback(new Error("长度在 5 到 16 个字符"));
       }
       else if(value !=this.registerForm.password){
         callback(new Error("两次密码不一致"));
@@ -65,11 +65,11 @@ export default {
       rules: {
         username: [
           {required: true, message: '请输入用户名', trigger: 'blur'},
-          {min: 6, max: 16, message: '长度在 6 到 16 个字符', trigger: 'change'}
+          {min: 5, max: 16, message: '长度在 5 到 16 个字符', trigger: 'change'}
         ],
         password: [
           {required: true, message: '请输入密码', trigger: 'blur'},
-          {min: 6, max: 16, message: '长度在 6 到 16 个字符', trigger: 'change'}
+          {min: 5, max: 16, message: '长度在 5 到 16 个字符', trigger: 'change'}
         ],
         passwordConfirm: [
           { required: true, validator:checkPassword, trigger: 'change'}

@@ -15,7 +15,7 @@
           <div>
             <el-button @click="switchShowInput" :icon="Edit" circle />
             <input v-if="showInput" type="text" style="width: 20%;margin: 0 15px 0 15px " v-model="inputValue" @blur="saveInput" @keyup.enter="saveInput" />
-            <el-button id="leftButton" v-if="!showInput" :disabled="leftNochange" type="primary" @click="leftButtonHandle">{{ leftButtonMsg }}</el-button>
+            <el-button id="leftButton" v-if="!showInput" :disabled="leftNoCharge" type="primary" @click="leftButtonHandle">{{ leftButtonMsg }}</el-button>
             <el-button id="rightButton" type="primary" :disabled="modeNoChange" @click="rightButtonHandle">{{ rightButtonMsg }}</el-button>
             <el-button @click="getCharge" :icon="RefreshRight" circle />
           </div>
@@ -47,6 +47,7 @@ import {left} from "core-js/internals/array-reduce";
         showInput: false,
         loading:true,
         pile:88,
+        currentAmount: 0,
         titleMessage: "网络错误",
         subtitleMsg:"请检查网络连接",
         leftButtonMsg:"左按钮",
@@ -55,15 +56,15 @@ import {left} from "core-js/internals/array-reduce";
         cancelClicked: false,
         fastChargingMode: false,
         modeNoChange: false,
-        leftNochange: false,
+        leftNoCharge: false,
         states:"",
         position:0,
         chargeApplyInfo:{
-          amount:300,
+          amount:100,
           fast:true,
-          totalAmount:300,
+          totalAmount:100,
         },
-        totalAmount: 300,
+        totalAmount: 100,
       }
     },
     methods:{
@@ -75,9 +76,10 @@ import {left} from "core-js/internals/array-reduce";
         }
       },
       saveInput() {
+        this.inputValue = Number(this.inputValue);
         // 处理保存操作逻辑
         if(this.inputValue == null)
-          this.inputValue = 300;
+          this.inputValue = 100;
         this.chargeApplyInfo.amount = this.inputValue;
         this.showInput = false;
         this.modifyCharge(this.chargeApplyInfo);
@@ -91,9 +93,9 @@ import {left} from "core-js/internals/array-reduce";
         if(resp.status === "充电中"){
           this.iconStyle = "success";
           this.subtitleMsg = "您的爱车在" + resp.pile.toString() + "号充电桩";
-          this.titleMessage = "正在充电" ;
+          this.titleMessage = "已充" + resp.currentAmount.toFixed(2) + "度电,当前消费" + resp.currentFee.toFixed(2) + "元";
           this.leftButtonMsg = "取消充电";
-          this.leftNochange = false;
+          this.leftNoCharge = false;
           this.rightButtonMsg = "模式:" + (resp.fast ? "快充" : "慢充");
           this.modeNoChange = true;
         }else if(resp.status === "等候区排队中"){
@@ -104,21 +106,21 @@ import {left} from "core-js/internals/array-reduce";
           else if(resp.position != 0 )
             this.subtitleMsg = "您的爱车正在排队,前方还有" + resp.position.toString() + "辆车";
           this.leftButtonMsg = "取消排队";
-          this.leftNochange = false;
+          this.leftNoCharge = false;
           this.rightButtonMsg = "模式:" + (resp.fast ? "快充" : "慢充");
           this.modeNoChange = false;
         }else if(resp.status === "充电区等候中"){
           this.iconStyle = "warning";
           this.titleMessage = "请到达" + resp.pile.toString() + "号充电桩";
           this.subtitleMsg = "小钱等您插上充电枪哟";
-          this.leftNochange = false;
+          this.leftNoCharge = false;
           this.leftButtonMsg = "取消充电";
           this.rightButtonMsg = "模式:" + (resp.fast ? "快充" : "慢充");
           this.modeNoChange = true;
         }else if(resp.status === "充电完成"){
           this.iconStyle = "success";
-          this.leftButtonMsg = "再次充电";
-          this.leftNochange = false;
+          this.leftButtonMsg = "拔下充电枪";
+          this.leftNoCharge = false;
           this.modeNoChange = false;
           this.rightButtonMsg = "模式:" + (resp.fast ? "快充" : "慢充");
           this.titleMessage = "本次充电完成";
@@ -133,7 +135,7 @@ import {left} from "core-js/internals/array-reduce";
         }
       },
       leftButtonHandle() {
-        if(this.states === "充电中")
+        if(this.states === "充电中" || this.states === "充电完成")
           this.finishCharge();
         else if(this.states === "等候区排队中")
           this.cancelCharge();
@@ -145,7 +147,7 @@ import {left} from "core-js/internals/array-reduce";
         document.getElementById("leftButton").blur();
       },
       rightButtonHandle() {
-        if (this.fastChargingMode == true) {
+        if (this.fastChargingMode === true) {
           this.fastChargingMode = false;
         } else {
           this.fastChargingMode = true;
@@ -159,6 +161,11 @@ import {left} from "core-js/internals/array-reduce";
       getCharge(){
         console.log("getCharge");
         this.loading = true;
+        this.iconStyle = "error";
+        this.titleMessage = "暂未充电";
+        this.subtitleMsg = "您还没有充电,点击按钮开始充电吧";
+        this.leftButtonMsg = "开始充电";
+        this.rightButtonMsg = "模式:" + (this.fastChargingMode ? "快充" : "慢充");
         getRequest('/charge').then(resp=>{
           console.log(JSON.stringify(resp));
           //alert(JSON.stringify(resp));
@@ -168,6 +175,9 @@ import {left} from "core-js/internals/array-reduce";
             this.pile = resp.pile;
             //修改页面状态
             this.updateUI(resp);
+          }
+          else if(resp && resp.code === 404){
+            
           }
           //用户没有充电
           else if(resp && !resp.status){
@@ -179,7 +189,6 @@ import {left} from "core-js/internals/array-reduce";
             this.subtitleMsg = "您还没有充电,点击按钮开始充电吧";
             this.leftButtonMsg = "开始充电";
             this.rightButtonMsg = "模式:" + (this.fastChargingMode ? "快充" : "慢充");
-            ElMessage.warning("用户没有充电请求");
           }else{
             console.log("getCharge fail2");
             this.updateUI(resp);
@@ -189,7 +198,10 @@ import {left} from "core-js/internals/array-reduce";
       },
       modifyCharge(){
         console.log("modifyCharge");
-        this.chargeApplyInfo.fast = this.fastChargingMode;
+        console.log(this.chargeApplyInfo.amount);
+        if(this.states)
+          this.chargeApplyInfo.fast = this.fastChargingMode;
+        this.chargeApplyInfo.amount = this.inputValue;
         if(this.states !== "" && this.states !== "充电完成"){
           putRequest('/charge',this.chargeApplyInfo).then(resp=>{
             //修改页面状态
@@ -199,8 +211,12 @@ import {left} from "core-js/internals/array-reduce";
       },
       createCharge(){
         console.log(this.chargeApplyInfo.amount);
+        console.log(this.chargeApplyInfo.fast);
+        console.log(this.chargeApplyInfo.totalAmount);
+        console.log(this.chargeApplyInfo);
         this.loading = true;
-        this.chargeApplyInfo.fast = this.fastChargingMode;
+        //if(this.states)
+          this.chargeApplyInfo.fast = this.fastChargingMode;
         postRequest('/charge', this.chargeApplyInfo).then(resp=>{
           //修改页面状态
           if(resp){
@@ -223,14 +239,14 @@ import {left} from "core-js/internals/array-reduce";
             //修改页面状态
             this.iconStyle = "success";
             this.leftButtonMsg = "再次充电";
-            this.leftNochange = false;
+            this.leftNoCharge = false;
             this.rightButtonMsg = "模式:" + (this.fastChargingMode ? "快充" : "慢充");
             this.titleMessage = "本次充电完成";
             this.subtitleMsg = "您的爱车在" + this.pile + "号充电桩，请记得将充电桩归位哟";
             this.modeNoChange = false;
             this.states = "充电完成";
             console.log(JSON.stringify(resp));
-            this.$alert("本次收费" + JSON.stringify(resp.totalFee) + "元", '查询信息', {
+            this.$alert("本次共收费" + resp.totalFee.toFixed(2) + "元", '查询信息', {
                 confirmButtonText: '关闭',
             });
           }else{

@@ -9,14 +9,16 @@ axios.interceptors.request.use(config => {
     if(window.sessionStorage.getItem('tokenStr')){
         config.headers['Authorization'] = "Bearer " +window.sessionStorage.getItem('tokenStr');
     }
+    //config.headers['content-type'] = "application/x-www-form-urlencoded";
     return config;
 },error => {
-    ElMessage.error("您还为登录，请先登录");
-    this.$router.replace('/');
+        ElMessage.error("您还为登录，请先登录");
+        this.$router.replace('/');
 })
 
 //响应拦截器
 axios.interceptors.response.use(success => {
+    console.log(success);
     //登录成功
     if (success.data.code == 0) {
     }
@@ -27,8 +29,10 @@ axios.interceptors.response.use(success => {
         ElMessage.error("用户名或密码错误");
     }
     else{
-        if(success.data.msg !== null){
-            ElMessage.success(success.data.message);
+        if(success.data.time){
+        }
+        else if(success.data.message !== null){
+            ElMessage.error(success.data.message);
         }
         else{
             ElMessage.error("不知道什么原因，操作失败了:(");
@@ -36,21 +40,35 @@ axios.interceptors.response.use(success => {
     }
     return success.data;
 },error => {
-    if(error.status === 504 || error.status === 404){
-        ElMessage.error({message: '服务器被吃了QAQ'});
-    }
-    else if(error.status === 403){
-        ElMessage.error({message: '权限不足，请联系管理员'});
+    console.log(error);
+    if(error.response.status){
+        switch(error.response.status){
+            case 401:
+                ElMessage.error({message: '密码错误，请重新登录'});
+                router.replace('/');
+                break;
+            case 403:
+                ElMessage.error({message: '权限不足，请联系管理员'});
+                break;
+            case 404:
+                ElMessage.error(error.response.data.message);
+                break;
+            case 500:
+                break;
+            default:
+                if(error.response.data.message){
+                    ElMessage.error({message: error.response.data.message});
+                }
+                else{
+                    ElMessage.error({message: '未知错误'});
+                }
+                break;
+        }
     }
     else{
-        if(error.data && error.data.code===4){
-            ElMessage.error({message: error.data.message});
-        }
-        else{
-            ElMessage.error({message: '未知错误'});
-        }
+        ElMessage.error({message: '未知错误'});
     }
-    return;
+    return error.response.data;
 })
 
 let base = '';
